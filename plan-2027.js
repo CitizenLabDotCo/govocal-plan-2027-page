@@ -138,7 +138,8 @@
       onlys: all('[data-only]', el).map(function (n) {
         return { n: n, set: n.getAttribute('data-only').split(',').map(function (x) { return parseInt(x, 10); }) };
       }),
-      counts: all('[data-count]', el).map(function (n) {
+      /* not data-count: govocal.com runs its own count-up on every [data-count] element */
+      counts: all('[data-gvp-count]', el).map(function (n) {
         var dec = num(n, 'data-dec', 0);
         return { n: n, from: num(n, 'data-from', 0), to: num(n, 'data-to', 0), a: num(n, 'data-a', 0), d: num(n, 'data-d', 0.2),
           f: new Intl.NumberFormat(lang, { minimumFractionDigits: dec, maximumFractionDigits: dec }), last: null, end: n.textContent };

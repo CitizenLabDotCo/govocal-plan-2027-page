@@ -372,6 +372,8 @@
       var over = false;
       darks.forEach(function (d) { var r = d.getBoundingClientRect(); if (r.top <= edge - 2 && r.bottom > edge + 12) over = true; });
       bar.classList.toggle('is-over', over);
+      /* the step bar stays away while the opening screen is on: it repeats the outline shown there */
+      if (hero) bar.classList.toggle('is-away', hero.getBoundingClientRect().bottom > edge + 24);
     }
     var line = vh * 0.45, current = -1;
     targets.forEach(function (t, i) { if (t && t.getBoundingClientRect().top < line) current = i; });
@@ -539,6 +541,7 @@
   if ('ResizeObserver' in window) new ResizeObserver(function () { stale = true; }).observe(root);
   window.addEventListener('load', function () { stale = true; });
 
+  root.setAttribute('data-gvp-ready', '');   /* tells the small inline script next to the bar that this script took over */
   setTop();
   setMode();
   frame();

@@ -125,11 +125,14 @@
   var darks = all('.gvp-div, .gvp-stage--deep, .gvp-plan');
   var stages = all('.gvp-stage').map(function (el) {
     var caps = all('.gvp-caps > li', el);
-    el.style.setProperty('--beats', caps.length);
+    /* the "For your 2027 plan" recaps play as ONE step: all three points stay on screen and light up as the line fills */
+    var single = /^take/.test(el.getAttribute('data-stage') || '');
+    if (single) el.classList.add('gvp-stage--single');
+    el.style.setProperty('--beats', single ? 1.4 : caps.length);
     var dotsBox = el.querySelector('[data-dots]');
     return {
-      el: el, caps: caps, beats: caps.length, beat: -1,
-      fig: el.querySelector('.gvp-figure'), figH: 0, plain: el.getAttribute('data-flow') === 'plain',
+      el: el, caps: caps, beats: single ? 1 : caps.length, beat: -1, single: single,
+      fig: el.querySelector('.gvp-figure'), figH: 0, plain: single || el.getAttribute('data-flow') === 'plain',
       notes: all('.gvp-figure .gvp-note', el).map(function (n) {
         var layer = n.closest ? n.closest('[data-only]') : null, to = caps.length;
         if (layer) to = Math.max.apply(null, layer.getAttribute('data-only').split(',').map(function (x) { return parseInt(x, 10); }));
@@ -271,14 +274,15 @@
     if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || tag === 'BUTTON' || tag === 'A' || tag === 'SUMMARY' || tag === 'VIDEO') return;
     if (stale) placeStops();
     var y = glide ? glide.to : window.scrollY, stop = nextStop(y, down ? 1 : -1);
-    if (!stop || !(stop.beat || pinnedAt(y))) return;
+    /* inside a scene a key plays one step; between scenes it goes to the next block when that is at most a screen away */
+    if (!stop || (!(stop.beat || pinnedAt(y)) && Math.abs(stop.y - y) > window.innerHeight * 0.95)) return;
     e.preventDefault();
     glideTo(stop.y);
   });
   ['touchstart', 'mousedown'].forEach(function (name) { window.addEventListener(name, stopGlide, { passive: true }); });
 
   var takes = all('.gvp-take');
-  var links = all('.gvp-bar li a');
+  var links = all('.gvp-bar li a:not([href="#gvp-top"])');
   var targets = links.map(function (a) { return root.querySelector(a.getAttribute('href')); });
   var staged = false, flow = false, flowW = -1, flowFits = false, io = null, ticking = false;
   var coarse = window.matchMedia('(pointer: coarse)');
@@ -322,7 +326,10 @@
     s.el.style.setProperty('--p', p.toFixed(4));
     s.el.style.setProperty('--bp', Math.min(1, (p * s.beats) % 1 / 0.94).toFixed(3));
     var beat = Math.min(s.beats, Math.floor(p * s.beats) + 1);
-    if (beat !== s.beat) {
+    if (s.single) {
+      s.beat = beat;
+      s.caps.forEach(function (c, i) { c.classList.toggle('is-wait', p < i / s.caps.length - 0.001); });
+    } else if (beat !== s.beat) {
       s.beat = beat;
       s.caps.forEach(function (c, i) { c.classList.toggle('is-active', i === beat - 1); c.classList.toggle('is-past', i < beat - 1); });
       if (s.pips) s.pips.forEach(function (d, i) { d.classList.toggle('is-now', i === beat - 1); d.classList.toggle('is-done', i < beat - 1); });
@@ -494,7 +501,7 @@
     window.setTimeout(function () {      /* after the browser's own scroll-into-view */
       stages.forEach(function (s) {
         var k = s.caps.indexOf(li);
-        if (k < 0) return;
+        if (k < 0 || s.single) return;
         var edge = siteTop + barH, total = s.el.offsetHeight - (window.innerHeight - edge);
         window.scrollTo(0, s.el.getBoundingClientRect().top + window.scrollY - edge + total * ((k + 0.9) / s.beats));
       });

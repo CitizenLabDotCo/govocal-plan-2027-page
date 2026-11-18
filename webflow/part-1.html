@@ -26,7 +26,7 @@
   </ol>
   <span class="gvp-bar__line" aria-hidden="true"></span>
 </nav>
-<script>(function(){var b=document.querySelector('.gvp-bar'),r=document.getElementById('gvp');if(!b||!r||window.scrollY>200)return;b.classList.add('is-away');setTimeout(function(){if(!r.hasAttribute('data-gvp-ready'))b.classList.remove('is-away');},4000);})();</script>
+<style>#gvp:not([data-gvp-ready]) .gvp-bar{opacity:0;visibility:hidden;animation:gvp-bar-show .01s 4s forwards !important}@keyframes gvp-bar-show{to{opacity:1;visibility:visible}}</style>
 
 <header class="gvp-hero" id="gvp-top">
   <div class="gvp-wrap">
